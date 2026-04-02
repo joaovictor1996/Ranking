@@ -32,22 +32,6 @@ st.markdown("""
   animation: fadeIn 0.6s ease-in-out;
 }
 
-.up {
-  background-color: #55efc4;
-  color: black;
-  padding: 10px;
-  border-radius: 10px;
-  font-weight: bold;
-}
-
-.down {
-  background-color: #ff7675;
-  color: black;
-  padding: 10px;
-  border-radius: 10px;
-  font-weight: bold;
-}
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
@@ -56,7 +40,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================
-# CACHE
+# DADOS
 # =========================
 @st.cache_data(ttl=10)
 def carregar_dados():
@@ -79,12 +63,6 @@ def carregar_dados():
 busca = st.text_input("🔍 Buscar participante")
 
 # =========================
-# ESTADO PARA COMPARAR POSIÇÕES
-# =========================
-if "ranking_anterior" not in st.session_state:
-    st.session_state.ranking_anterior = {}
-
-# =========================
 # LOOP
 # =========================
 placeholder = st.empty()
@@ -94,14 +72,13 @@ while True:
 
         df_full = carregar_dados()
 
-        # Criar dicionário atual
-        ranking_atual = dict(zip(df_full["Nome"], df_full["Ranking"]))
-
-        # Filtro
-        if busca:
+        # =========================
+        # FILTRO (SÓ MOSTRA SE BUSCAR)
+        # =========================
+        if busca.strip():
             df_filtrado = df_full[df_full["Nome"].str.contains(busca, case=False, na=False)]
         else:
-            df_filtrado = df_full
+            df_filtrado = pd.DataFrame()
 
         col_esq, col_dir = st.columns([1, 1])
 
@@ -148,54 +125,45 @@ while True:
                     st.write(f"⭐ {row['Pontuacao']} pontos")
 
         # =========================
-        # RANKING
+        # RESULTADO DA BUSCA
         # =========================
         with col_dir:
-            st.subheader("📋 Ranking Geral")
+            st.subheader("📋 Resultado da Busca")
 
-            for _, row in df_filtrado.iterrows():
+            if busca.strip():
 
-                nome = row["Nome"]
-                ranking_atual_pos = row["Ranking"]
+                if df_filtrado.empty:
+                    st.warning("Nenhum participante encontrado")
 
-                classe = ""
+                else:
+                    for _, row in df_filtrado.iterrows():
 
-                # Comparar com ranking anterior
-                if nome in st.session_state.ranking_anterior:
-                    ranking_antigo = st.session_state.ranking_anterior[nome]
+                        nome = row["Nome"]
+                        ranking = row["Ranking"]
 
-                    if ranking_atual_pos < ranking_antigo:
-                        classe = "up"
-                    elif ranking_atual_pos > ranking_antigo:
-                        classe = "down"
+                        c1, c2, c3 = st.columns([1, 3, 1])
 
-                # Destaque da busca tem prioridade
-                if busca and busca.lower() in nome.lower():
-                    classe = "highlight"
+                        with c1:
+                            st.image(row["Foto"], width=60)
 
-                c1, c2, c3 = st.columns([1, 3, 1])
+                        with c2:
+                            st.markdown(
+                                f'<div class="highlight">#{ranking} - {nome}</div>',
+                                unsafe_allow_html=True
+                            )
 
-                with c1:
-                    st.image(row["Foto"], width=60)
+                        with c3:
+                            st.write(f"⭐ {row['Pontuacao']}")
 
-                with c2:
-                    st.markdown(
-                        f'<div class="{classe}">#{ranking_atual_pos} - {nome}</div>',
-                        unsafe_allow_html=True
-                    )
+                        st.divider()
 
-                with c3:
-                    st.write(f"⭐ {row['Pontuacao']}")
-
-                st.divider()
+            else:
+                st.info("Digite um nome para buscar 🔍")
 
         # =========================
         # GRÁFICO
         # =========================
         st.subheader("📊 Pontuação dos Participantes")
         st.bar_chart(df_full.set_index("Nome")["Pontuacao"])
-
-        # Atualizar estado
-        st.session_state.ranking_anterior = ranking_atual
 
     time.sleep(5)
