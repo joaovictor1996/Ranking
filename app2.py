@@ -4,13 +4,13 @@ import streamlit as st
 import time
 
 # =========================
-# CONFIGURAÇÃO
+# CONFIGURAÇÃO DA PÁGINA
 # =========================
 st.set_page_config(page_title="Ranking em Tempo Real", layout="wide")
 st.title("🏆 Ranking em Tempo Real")
 
 # =========================
-# CSS
+# CSS ANIMAÇÕES
 # =========================
 st.markdown("""
 <style>
@@ -25,22 +25,14 @@ st.markdown("""
 
 .highlight {
   background-color: #ffeaa7;
-  color: black;
   padding: 10px;
   border-radius: 10px;
-  font-weight: bold;
-  animation: fadeIn 0.6s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# DADOS
+# FUNÇÃO PARA CARREGAR DADOS
 # =========================
 @st.cache_data(ttl=10)
 def carregar_dados():
@@ -63,27 +55,29 @@ def carregar_dados():
 busca = st.text_input("🔍 Buscar participante")
 
 # =========================
-# LOOP
+# AUTO REFRESH
 # =========================
 placeholder = st.empty()
 
 while True:
     with placeholder.container():
 
+        # Ranking completo (NUNCA alterar)
         df_full = carregar_dados()
 
-        # =========================
-        # FILTRO (SÓ MOSTRA SE BUSCAR)
-        # =========================
-        if busca.strip():
+        # DataFrame filtrado (apenas para exibição)
+        if busca:
             df_filtrado = df_full[df_full["Nome"].str.contains(busca, case=False, na=False)]
         else:
-            df_filtrado = pd.DataFrame()
+            df_filtrado = df_full
 
+        # =========================
+        # LAYOUT
+        # =========================
         col_esq, col_dir = st.columns([1, 1])
 
         # =========================
-        # TOP 3
+        # TOP 3 GLOBAL
         # =========================
         with col_esq:
             st.subheader("🥇 Top 3")
@@ -125,40 +119,32 @@ while True:
                     st.write(f"⭐ {row['Pontuacao']} pontos")
 
         # =========================
-        # RESULTADO DA BUSCA
+        # RANKING GERAL (COM DESTAQUE NA BUSCA)
         # =========================
         with col_dir:
-            st.subheader("📋 Resultado da Busca")
+            st.subheader("📋 Ranking Geral")
 
-            if busca.strip():
+            for _, row in df_filtrado.iterrows():
 
-                if df_filtrado.empty:
-                    st.warning("Nenhum participante encontrado")
+                destaque = ""
+                if busca and busca.lower() in row["Nome"].lower():
+                    destaque = "highlight"
 
-                else:
-                    for _, row in df_filtrado.iterrows():
+                c1, c2, c3 = st.columns([1, 3, 1])
 
-                        nome = row["Nome"]
-                        ranking = row["Ranking"]
+                with c1:
+                    st.image(row["Foto"], width=60)
 
-                        c1, c2, c3 = st.columns([1, 3, 1])
+                with c2:
+                    st.markdown(
+                        f'<div class="{destaque}"><b>#{row["Ranking"]} - {row["Nome"]}</b></div>',
+                        unsafe_allow_html=True
+                    )
 
-                        with c1:
-                            st.image(row["Foto"], width=60)
+                with c3:
+                    st.write(f"⭐ {row['Pontuacao']}")
 
-                        with c2:
-                            st.markdown(
-                                f'<div class="highlight">#{ranking} - {nome}</div>',
-                                unsafe_allow_html=True
-                            )
-
-                        with c3:
-                            st.write(f"⭐ {row['Pontuacao']}")
-
-                        st.divider()
-
-            else:
-                st.info("Digite um nome para buscar 🔍")
+                st.divider()
 
         # =========================
         # GRÁFICO
