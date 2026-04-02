@@ -67,10 +67,10 @@ while True:
 
         # DataFrame filtrado (apenas para exibição)
         if busca:
-            # Filtra pelo nome que contém o termo de busca (case-insensitive)
+            # Filtra o DataFrame para incluir apenas os participantes que contêm o termo da busca
             df_filtrado = df_full[df_full["Nome"].str.contains(busca, case=False, na=False)]
         else:
-            # Caso não haja busca, o DataFrame completo é usado
+            # Caso não haja busca, exibe todos os participantes
             df_filtrado = df_full
 
         # =========================
@@ -126,39 +126,25 @@ while True:
         with col_dir:
             st.subheader("📋 Ranking Geral")
 
-            if busca:  # Exibir apenas os participantes que correspondem à busca
-                for _, row in df_filtrado.iterrows():
-                    destaque = "highlight" if busca.lower() in row["Nome"].lower() else ""
+            # Agora iteramos sobre df_filtrado para garantir que apenas os participantes filtrados sejam exibidos
+            for _, row in df_filtrado.iterrows():
+                destaque = "highlight" if busca.lower() in row["Nome"].lower() else ""
 
-                    c1, c2, c3 = st.columns([1, 3, 1])
+                c1, c2, c3 = st.columns([1, 3, 1])
 
-                    with c1:
-                        st.image(row["Foto"], width=60)
+                with c1:
+                    st.image(row["Foto"], width=60)
 
-                    with c2:
-                        st.markdown(
-                            f'<div class="{destaque}"><b>#{row["Ranking"]} - {row["Nome"]}</b></div>',
-                            unsafe_allow_html=True
-                        )
+                with c2:
+                    st.markdown(
+                        f'<div class="{destaque}"><b>#{row["Ranking"]} - {row["Nome"]}</b></div>',
+                        unsafe_allow_html=True
+                    )
 
-                    with c3:
-                        st.write(f"⭐ {row['Pontuacao']}")
+                with c3:
+                    st.write(f"⭐ {row['Pontuacao']}")
 
-                    st.divider()
-            else:  # Exibir todos os participantes quando não houver busca
-                for _, row in df_full.iterrows():
-                    c1, c2, c3 = st.columns([1, 3, 1])
-
-                    with c1:
-                        st.image(row["Foto"], width=60)
-
-                    with c2:
-                        st.markdown(f"<b>#{row['Ranking']} - {row['Nome']}</b>", unsafe_allow_html=True)
-
-                    with c3:
-                        st.write(f"⭐ {row['Pontuacao']}")
-
-                    st.divider()
+                st.divider()
 
         # =========================
         # GRÁFICO
