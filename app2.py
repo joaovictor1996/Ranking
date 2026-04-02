@@ -4,13 +4,13 @@ import streamlit as st
 import time
 
 # =========================
-# CONFIGURAÇÃO DA PÁGINA
+# CONFIGURAÇÃO
 # =========================
 st.set_page_config(page_title="Ranking em Tempo Real", layout="wide")
 st.title("🏆 Ranking em Tempo Real")
 
 # =========================
-# CSS ANIMAÇÕES
+# CSS
 # =========================
 st.markdown("""
 <style>
@@ -25,14 +25,38 @@ st.markdown("""
 
 .highlight {
   background-color: #ffeaa7;
+  color: black;
   padding: 10px;
   border-radius: 10px;
+  font-weight: bold;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.up {
+  background-color: #55efc4;
+  color: black;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.down {
+  background-color: #ff7675;
+  color: black;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# FUNÇÃO PARA CARREGAR DADOS
+# CACHE
 # =========================
 @st.cache_data(ttl=10)
 def carregar_dados():
@@ -55,29 +79,34 @@ def carregar_dados():
 busca = st.text_input("🔍 Buscar participante")
 
 # =========================
-# AUTO REFRESH
+# ESTADO PARA COMPARAR POSIÇÕES
+# =========================
+if "ranking_anterior" not in st.session_state:
+    st.session_state.ranking_anterior = {}
+
+# =========================
+# LOOP
 # =========================
 placeholder = st.empty()
 
 while True:
     with placeholder.container():
 
-        # Ranking completo (NUNCA alterar)
         df_full = carregar_dados()
 
-        # DataFrame filtrado (apenas para exibição)
+        # Criar dicionário atual
+        ranking_atual = dict(zip(df_full["Nome"], df_full["Ranking"]))
+
+        # Filtro
         if busca:
             df_filtrado = df_full[df_full["Nome"].str.contains(busca, case=False, na=False)]
         else:
             df_filtrado = df_full
 
-        # =========================
-        # LAYOUT
-        # =========================
         col_esq, col_dir = st.columns([1, 1])
 
         # =========================
-        # TOP 3 GLOBAL
+        # TOP 3
         # =========================
         with col_esq:
             st.subheader("🥇 Top 3")
@@ -119,16 +148,30 @@ while True:
                     st.write(f"⭐ {row['Pontuacao']} pontos")
 
         # =========================
-        # RANKING GERAL (COM DESTAQUE NA BUSCA)
+        # RANKING
         # =========================
         with col_dir:
             st.subheader("📋 Ranking Geral")
 
             for _, row in df_filtrado.iterrows():
 
-                destaque = ""
-                if busca and busca.lower() in row["Nome"].lower():
-                    destaque = "highlight"
+                nome = row["Nome"]
+                ranking_atual_pos = row["Ranking"]
+
+                classe = ""
+
+                # Comparar com ranking anterior
+                if nome in st.session_state.ranking_anterior:
+                    ranking_antigo = st.session_state.ranking_anterior[nome]
+
+                    if ranking_atual_pos < ranking_antigo:
+                        classe = "up"
+                    elif ranking_atual_pos > ranking_antigo:
+                        classe = "down"
+
+                # Destaque da busca tem prioridade
+                if busca and busca.lower() in nome.lower():
+                    classe = "highlight"
 
                 c1, c2, c3 = st.columns([1, 3, 1])
 
@@ -137,7 +180,7 @@ while True:
 
                 with c2:
                     st.markdown(
-                        f'<div class="{destaque}"><b>#{row["Ranking"]} - {row["Nome"]}</b></div>',
+                        f'<div class="{classe}">#{ranking_atual_pos} - {nome}</div>',
                         unsafe_allow_html=True
                     )
 
@@ -151,5 +194,8 @@ while True:
         # =========================
         st.subheader("📊 Pontuação dos Participantes")
         st.bar_chart(df_full.set_index("Nome")["Pontuacao"])
+
+        # Atualizar estado
+        st.session_state.ranking_anterior = ranking_atual
 
     time.sleep(5)
