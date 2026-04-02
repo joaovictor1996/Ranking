@@ -1,14 +1,3 @@
-# app_realtime_final_cloud.py
-import pandas as pd
-import streamlit as st
-import time
-
-# =========================
-# CONFIGURAÇÃO DA PÁGINA
-# =========================
-st.set_page_config(page_title="Ranking em Tempo Real", layout="wide")
-st.title("🏆 Ranking em Tempo Real")
-
 # =========================
 # CSS ANIMAÇÕES
 # =========================
@@ -24,7 +13,8 @@ st.markdown("""
 }
 
 .highlight {
-  background-color: #ffeaa7;
+  background-color: #2D3436; /* Cor escura de fundo para contraste */
+  color: #fff; /* Texto branco */
   padding: 10px;
   border-radius: 10px;
 }
@@ -124,7 +114,7 @@ while True:
         with col_dir:
             st.subheader("📋 Ranking Geral")
 
-            for _, row in df_filtrado.iterrows():
+            for _, row in df_filtrado.iterrows():  # Mudamos aqui para iterar sobre df_filtrado
 
                 destaque = ""
                 if busca and busca.lower() in row["Nome"].lower():
