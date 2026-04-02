@@ -1,24 +1,34 @@
+import pandas as pd
+import streamlit as st
+import time
+
+# =========================
+# CONFIGURAÇÃO DA PÁGINA
+# =========================
+st.set_page_config(page_title="Ranking em Tempo Real", layout="wide")
+st.title("🏆 Ranking em Tempo Real")
+
 # =========================
 # CSS ANIMAÇÕES
 # =========================
 st.markdown("""
-<style>
-@keyframes pulse {
-  0% { box-shadow: 0 0 15px gold; transform: translateY(0px); }
-  50% { box-shadow: 0 0 35px gold; transform: translateY(-10px); }
-  100% { box-shadow: 0 0 15px gold; transform: translateY(0px); }
-}
-.pulse {
-  animation: pulse 2s infinite;
-}
+    <style>
+    @keyframes pulse {
+        0% { box-shadow: 0 0 15px gold; transform: translateY(0px); }
+        50% { box-shadow: 0 0 35px gold; transform: translateY(-10px); }
+        100% { box-shadow: 0 0 15px gold; transform: translateY(0px); }
+    }
+    .pulse {
+        animation: pulse 2s infinite;
+    }
 
-.highlight {
-  background-color: #2D3436; /* Cor escura de fundo para contraste */
-  color: #fff; /* Texto branco */
-  padding: 10px;
-  border-radius: 10px;
-}
-</style>
+    .highlight {
+        background-color: #2D3436; /* Cor escura de fundo para contraste */
+        color: #fff; /* Texto branco */
+        padding: 10px;
+        border-radius: 10px;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
 # =========================
